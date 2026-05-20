@@ -104,6 +104,8 @@ vim.api.nvim_create_autocmd('TextYankPost', {
     callback = function() vim.hl.hl_op() end,
 })
 
+vim.keymap.set('n', '<leader>q', vim.diagnostic.setqflist, { desc = 'Open diagnostic [Q]uickfix list' })
+
 --set theme
 -- vim.cmd("colorscheme naysayer")
 
