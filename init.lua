@@ -663,7 +663,7 @@ require('fff').setup({
   lazy_sync = true,
   prompt_vim_mode = false,
   layout = {
-    height = 0.8,
+    height = 0.4,
     width = 1.0,
     prompt_position = 'bottom',   -- or 'top'
     preview_position = 'top',   -- 'left' | 'right' | 'top' | 'bottom'
