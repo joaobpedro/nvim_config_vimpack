@@ -5,6 +5,8 @@ vim.g.mapleader = ' '
 vim.g.maplocalleader = ' '
 local transparency = false
 
+vim.o.autocomplete = true
+
 vim.opt.backup = false
 -- Set to true if you have a Nerd Font installed and selected in the terminal
 vim.g.have_nerd_font = true
@@ -52,7 +54,6 @@ vim.o.splitright = true
 vim.o.splitbelow = true
 
 vim.o.list = false
--- vim.opt.listchars = { tab = '» ', trail = '·', nbsp = '␣' }
 
 -- Preview substitutions live, as you type!
 vim.o.inccommand = 'split'
@@ -60,12 +61,16 @@ vim.o.inccommand = 'split'
 -- Show which line your cursor is on
 vim.o.cursorline = true
 
+vim.opt.autochdir = true
+
 -- Minimal number of screen lines to keep above and below the cursor.
 vim.o.scrolloff = 10
 
 vim.o.confirm = true
 
-vim.o.complete = ".,w"
+vim.opt.completeopt = { 'menuone', 'noselect'}
+vim.o.pumheight = 6
+
 -- KEYMAPS
 vim.keymap.set('n', '<Esc>', '<cmd>nohlsearch<CR>')
 vim.keymap.set({'n', 'o'}, '-', '$', { noremap = true, desc = "End of line" })
@@ -87,15 +92,25 @@ vim.diagnostic.config {
 }
 
 vim.keymap.set('n', '<leader>q', vim.diagnostic.setloclist, { desc = 'Open diagnostic [Q]uickfix list' })
+vim.keymap.set('n', '<C-q>', function()
+  local qf_exists = false
+  for _, win in pairs(vim.fn.getwininfo()) do
+    if win.quickfix == 1 then
+      qf_exists = true
+    end
+  end
+  if qf_exists then
+    vim.cmd('cclose')
+  else
+    vim.cmd('copen')
+  end
+end, { desc = "Toggle Quickfix List" })
 
 vim.keymap.set('t', '<Esc><Esc>', '<C-\\><C-n>', { desc = 'Exit terminal mode' })
 
 vim.keymap.set('n', '<leader>bn', '<cmd>bnext<CR>', { noremap = true, silent = true, desc = 'Next Buffer' })
 vim.keymap.set('n', '<leader>bp', '<cmd>bprev<CR>', { noremap = true, silent = true, desc = 'Previous Buffer' })
-
-vim.keymap.set("n", "<C-8>", "<C-w>5<")
-vim.keymap.set("n", "<C-9>", "<C-w>5>")
-vim.keymap.set("n", "<C-7>", "<C-w>=")
+vim.keymap.set('n', '<leader>e', '<cmd>Ex<CR>', { noremap = true, silent = true, desc = 'Open Explorer' })
 
 -- [[ Basic Autocommands ]]
 vim.api.nvim_create_autocmd('TextYankPost', {
@@ -103,11 +118,6 @@ vim.api.nvim_create_autocmd('TextYankPost', {
     group = vim.api.nvim_create_augroup('kickstart-highlight-yank', { clear = true }),
     callback = function() vim.hl.hl_op() end,
 })
-
-vim.keymap.set('n', '<leader>q', vim.diagnostic.setqflist, { desc = 'Open diagnostic [Q]uickfix list' })
-
---set theme
--- vim.cmd("colorscheme naysayer")
 
 if transparency then
     vim.opt.termguicolors = true
@@ -118,13 +128,6 @@ if transparency then
     vim.cmd("hi NormalFloat guibg=NONE ctermbg=NONE") -- for floating windows
     vim.cmd("hi CursorLine guibg=NONE ctermbg=NONE") -- for the current line highlight
 end
-
--- function to toggle line numbers
-local toggle_number = function() 
-    vim.o.number = not vim.o.number
-    vim.o.relativenumber = not vim.o.relativenumber
-end
-vim.keymap.set('n', '<leader>tn', toggle_number)
 
 -- When jumping to the end of the file (G), automatically center the screen (zz)
 vim.keymap.set('n', 'G', 'Gzz', { noremap = true })
@@ -137,14 +140,6 @@ vim.keymap.set('n', '<C-u>', '<C-u>zz', { noremap = true })
 vim.keymap.set('n', 'n', 'nzz', { noremap = true })
 vim.keymap.set('n', 'N', 'Nzz', { noremap = true })
 vim.keymap.set('n', 'G', 'Gzz', { noremap = true })
-
--- When doing half-page jumps down (<C-d>) or up (<C-u>), center the screen
-vim.keymap.set('n', '<C-d>', '<C-d>zz', { noremap = true })
-vim.keymap.set('n', '<C-u>', '<C-u>zz', { noremap = true })
-
--- When moving to the next search result (n) or previous (N), center the screen
-vim.keymap.set('n', 'n', 'nzz', { noremap = true })
-vim.keymap.set('n', 'N', 'Nzz', { noremap = true })
 
 vim.keymap.set("v", "<M-j>", ":m '>+1<CR>gv=gv")
 vim.keymap.set("v", "<M-k>", ":m '<-2<CR>gv=gv")
@@ -289,7 +284,6 @@ end, { range = true, desc = "Format Markdown Table" })
 
 vim.keymap.set("v", "<leader>tf", ":FormatTable<CR>", { desc = "Format selected table" })
 
-
 local map = vim.keymap.set
 local expr = { expr = true }
 
@@ -340,7 +334,6 @@ map("i", "<BS>", function()
 end, expr)
 
 -- surround keymaps
--- Select text, press ( to get (text)
 vim.keymap.set("x", "(", 'c(<C-r>")<Esc>')
 vim.keymap.set("x", "[", 'c[<C-r>"]<Esc>')
 vim.keymap.set("x", "{", 'c{<C-r>"}<Esc>')
@@ -369,7 +362,6 @@ vim.keymap.set("n", "<M-d>", change_all_occurrences, { desc = "Change all occurr
 
 -- =============================================================================================
 -- =============================================================================================
--- -- Navigate search results without leaving your file
 vim.keymap.set("n", "<M-p>", ":cprev<CR>zz", { desc = "Previous search result" })
 vim.keymap.set("n", "<M-n>", ":cnext<CR>zz", { desc = "Next search result" })
 
@@ -384,8 +376,6 @@ vim.keymap.set("n", "<leader>ec", function()
     local config_path = vim.fn.stdpath("config") .. "/init.lua"
     vim.cmd("edit " .. config_path)
 end, { desc = "Edit Neovim config" })
-
-
 
 -- =============================================================================================
 -- =============================================================================================
@@ -414,19 +404,6 @@ end
 vim.api.nvim_create_autocmd({ "BufWinEnter", "WinEnter" }, {
     callback = highlight_keywords,
 })
-
--- function to open and edit the Global Todos
-local Todos = function()
-    local global_todos = "./Todos.md"
-    local todos_path = vim.fn.stdpath("config") .. global_todos
-    if vim.fn.filereadable(todos_path) ~= 0 then
-        vim.cmd("edit " .. todos_path)
-    else
-        print("TODOS.md is not readable. Please check if the file exisits!")
-    end
-end
-vim.keymap.set("n", "<leader>td", Todos, {desc = "Global todos files, kepth in the config dir"})
-
 
 -- =============================================================================================
 -- =============================================================================================
@@ -573,7 +550,6 @@ for _, buf in ipairs(vim.api.nvim_list_bufs()) do
         cache_open(buf)
     end
 end
-
 
 -- =============================================================================================
 -- =============================================================================================
@@ -747,12 +723,14 @@ require('gruber-darker').setup({
 vim.cmd.colorscheme('gruber-darker')
 
 vim.pack.add({
-    { src = 'https://github.com/nvim-mini/mini.nvim', version = 'stable'},
-})
-require('mini.align').setup()
-
-vim.pack.add({
   { src = 'https://github.com/neovim/nvim-lspconfig'},
 })
 vim.lsp.enable('pyright')
 vim.lsp.enable('clangd')
+
+-- I can make this better, set the makepr to the build bat and then add a keymap to the make stuff.
+local build_file = "build.bat"
+vim.keymap.set('n', '<leader>c', '<cmd>!' .. build_file .. '<CR>', { desc = 'Compile the cpp!' })
+
+vim.api.nvim_set_hl(0, 'Visual', {bg = '#0000FF', fg = '#FFFFFF'})
+vim.api.nvim_set_hl(0, 'CursorLine', {bg = '#10225B'})

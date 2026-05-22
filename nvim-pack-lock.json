@@ -1,0 +1,16 @@
+{
+  "plugins": {
+    "fff.nvim": {
+      "rev": "6645a68ebc1f1a0dc98c1669a7e3f6d91625f79f",
+      "src": "https://github.com/dmtrKovalenko/fff.nvim"
+    },
+    "gruber-darker.nvim": {
+      "rev": "1793c0929ca965430410f7ec578272a4af9226ee",
+      "src": "https://github.com/thimc/gruber-darker.nvim"
+    },
+    "nvim-lspconfig": {
+      "rev": "246572944c2a1e2a646c2e7609ff619b0fe74c18",
+      "src": "https://github.com/neovim/nvim-lspconfig"
+    }
+  }
+}
