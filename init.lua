@@ -1,9 +1,11 @@
 -- Set <space> as the leader key
 -- See `:help mapleader`
 --  NOTE: Must happen before plugins are loaded (otherwise wrong leader will be used)
+require("vim._core.ui2").enable({})
 vim.g.mapleader = ' '
 vim.g.maplocalleader = ' '
 local transparency = false
+
 
 vim.o.autocomplete = true
 
@@ -17,7 +19,6 @@ vim.opt.softtabstop = 4
 vim.opt.expandtab = true
 
 --  For more options, you can see `:help option-list`
-
 vim.o.number = true
 vim.o.relativenumber = false
 
@@ -38,6 +39,7 @@ vim.o.breakindent = true
 
 -- Save undo history
 vim.o.undofile = true
+vim.opt.undodir = vim.fn.stdpath("data") .. "/undodir"
 
 -- Case-insensitive searching UNLESS \C or one or more capital letters in the search term
 vim.o.ignorecase = true
@@ -76,6 +78,14 @@ vim.keymap.set('n', '<Esc>', '<cmd>nohlsearch<CR>')
 vim.keymap.set({'n', 'o'}, '-', '$', { noremap = true, desc = "End of line" })
 vim.keymap.set({'n', 'o'}, '0', '^', { desc = "Start of line" })
 
+vim.keymap.set("v", "<", "<gv", { desc = "Unindent and keep selection" })
+vim.keymap.set("v", ">", ">gv", { desc = "Indent and keep selection" })
+
+vim.keymap.set("n", "<leader>u", function()
+    vim.cmd.packadd("nvim.undotree")
+    require("undotree").open()
+end, { desc = "Toggle Builtin Undotree" })
+
 -- See :help vim.diagnostic.Opts
 vim.diagnostic.config {
     update_in_insert = false,
@@ -108,8 +118,8 @@ end, { desc = "Toggle Quickfix List" })
 
 vim.keymap.set('t', '<Esc><Esc>', '<C-\\><C-n>', { desc = 'Exit terminal mode' })
 
-vim.keymap.set('n', '<leader>bn', '<cmd>bnext<CR>', { noremap = true, silent = true, desc = 'Next Buffer' })
-vim.keymap.set('n', '<leader>bp', '<cmd>bprev<CR>', { noremap = true, silent = true, desc = 'Previous Buffer' })
+vim.keymap.set('n', '<Tab>', '<cmd>bnext<CR>', { noremap = true, silent = true, desc = 'Next Buffer' })
+vim.keymap.set('n', '<S-Tab>', '<cmd>bprev<CR>', { noremap = true, silent = true, desc = 'Previous Buffer' })
 vim.keymap.set('n', '<leader>e', '<cmd>Ex<CR>', { noremap = true, silent = true, desc = 'Open Explorer' })
 
 -- [[ Basic Autocommands ]]
@@ -143,7 +153,8 @@ vim.keymap.set('n', 'G', 'Gzz', { noremap = true })
 
 vim.keymap.set("v", "<M-j>", ":m '>+1<CR>gv=gv")
 vim.keymap.set("v", "<M-k>", ":m '<-2<CR>gv=gv")
-vim.keymap.set("x", "<leader>p", '"_dP')
+-- paste without replacing the register
+vim.keymap.set("x", "p", '"_dP')
 
 -- =============================================================================================
 -- =============================================================================================
@@ -409,15 +420,7 @@ vim.api.nvim_create_autocmd({ "BufWinEnter", "WinEnter" }, {
 -- =============================================================================================
 -- NEOVIDE CONFIG
 if vim.g.neovide then
-    vim.o.guifont = "JetBrainsMono Nerd Font:h13" -- text below applies for VimScript
-    vim.g.neovide_disable_all_animations = true
-    vim.g.neovide_cursor_trail_size = 0
-    vim.g.neovide_cursor_vfx_mode = ""
-    vim.g.neovide_cursor_animation_length = 0.0
-    vim.g.neovide_position_animation_length = 0.0
-    vim.g.neovide_scroll_animation_length = 0.0
-    vim.g.neovide_scroll_animation_far_lines = 0
-    vim.g.neovide_no_idle = true
+    vim.o.guifont = "Iosevka Nerd Font Mono:h13" -- text below applies for VimScript
 end
 
 -- =============================================================================================
@@ -718,7 +721,7 @@ vim.keymap.set('n', '<leader>fw', function() require('fff').live_grep() end, { d
 
 vim.pack.add({"https://github.com/thimc/gruber-darker.nvim"})
 require('gruber-darker').setup({
-      transparent = true, -- removes the background
+      transparent = false, -- removes the background
     })
 vim.cmd.colorscheme('gruber-darker')
 
@@ -728,9 +731,21 @@ vim.pack.add({
 vim.lsp.enable('pyright')
 vim.lsp.enable('clangd')
 
--- I can make this better, set the makepr to the build bat and then add a keymap to the make stuff.
-local build_file = "build.bat"
-vim.keymap.set('n', '<leader>c', '<cmd>!' .. build_file .. '<CR>', { desc = 'Compile the cpp!' })
+vim.api.nvim_create_autocmd("FileType", {
+  pattern = "python",
+  callback = function()
+    vim.bo.makeprg = "py %"
+  end,
+})
+
+vim.api.nvim_create_autocmd("FileType", {
+  pattern = {"cpp", "c", "h"},
+  callback = function()
+    vim.bo.makeprg = vim.uv.cwd() .. "\\build_win32.bat"
+  end,
+})
+
+vim.keymap.set('n', '<leader>cp', "<cmd>make<CR>", { desc = 'FFFind files' })
 
 vim.api.nvim_set_hl(0, 'Visual', {bg = '#0000FF', fg = '#FFFFFF'})
 vim.api.nvim_set_hl(0, 'CursorLine', {bg = '#10225B'})
