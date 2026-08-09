@@ -4,7 +4,7 @@
 require("vim._core.ui2").enable({})
 vim.g.mapleader = ' '
 vim.g.maplocalleader = ' '
-local transparency = false
+local transparency = true
 
 
 vim.o.autocomplete = true
@@ -20,7 +20,7 @@ vim.opt.expandtab = true
 
 --  For more options, you can see `:help option-list`
 vim.o.number = true
-vim.o.relativenumber = false
+vim.o.relativenumber = true
 
 -- no wrapping
 vim.opt.wrap = false
@@ -351,6 +351,63 @@ vim.keymap.set("x", "{", 'c{<C-r>"}<Esc>')
 vim.keymap.set("x", "<", 'c<<C-r>"><Esc>')
 vim.keymap.set("x", '"', 'c"<C-r>""<Esc>')
 vim.keymap.set("x", "'", "c'<C-r>\"'<Esc>")
+
+-- =============================================================================================
+-- =============================================================================================
+-- FUZZY FINDER
+
+vim.api.nvim_create_user_command('FuzzyFind', function()
+    local tmpfile = vim.fn.tempname()
+
+    local buf = vim.api.nvim_create_buf(false, true)
+
+    local width = math.floor(vim.o.columns * 0.8)
+    local height = math.floor(vim.o.lines * 0.8)
+    local col = math.floor((vim.o.columns - width) / 2)
+    local row = math.floor((vim.o.lines - height) / 2)
+
+    local win = vim.api.nvim_open_win(buf, true, {
+        relative = 'editor',
+        width = width,
+        height = height,
+        col = col,
+        row = row,
+        style = 'minimal',
+        border = 'rounded'
+    })
+
+    vim.keymap.set({'t', 'n'}, '<Esc><Esc>', '<cmd>close<CR>', { buffer = buf_ui, silent = true })
+
+    local cmd = string.format('fzf > %s', tmpfile)
+
+    vim.fn.termopen(cmd, {
+        on_exit = function()
+            if vim.api.nvim_win_is_valid(win) then
+                vim.api.nvim_win_close(win, true)
+            end
+
+            if vim.fn.filereadable(tmpfile) == 1 then
+                local f = io.open(tmpfile, 'r')
+                if f then
+                    local selected_file = f:read('*l')
+                    f:close()
+
+                    if selected_file and selected_file ~= "" then
+                        vim.cmd('edit ' .. vim.fn.fnameescape(selected_file))
+                    end
+                end
+                vim.fn.delete(tmpfile)
+            end
+        end
+    })
+
+    vim.cmd('startinsert')
+end, { desc = 'Fast Fuzzy Finder via CLI fzf' })
+vim.keymap.set('n', '<leader>.', '<cmd>FuzzyFind<CR>', { noremap = true, silent = true, desc = 'Fuzzy Find Files' })
+
+-- =============================================================================================
+
+
 
 -- =============================================================================================
 -- =============================================================================================
